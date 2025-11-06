@@ -1,0 +1,194 @@
+---
+description: How to use .cursorignore to exclude files and folders from Cursor's indexing
+globs:
+alwaysApply: false
+---
+
+# Using .cursorignore
+
+## Overview
+
+The `.cursorignore` file tells Cursor which files and folders to exclude from:
+
+- Code indexing
+- AI context
+- Search results
+- File navigation
+
+## File Location
+
+The `.cursorignore` file should be placed in the **project root** directory:
+
+```
+PROJECT_ROOT/
+├── .cursorignore
+├── .gitignore
+└── ...
+```
+
+## Syntax
+
+`.cursorignore` uses the same syntax as `.gitignore`:
+
+```
+# Comments start with #
+
+# Ignore specific file
+specific-file.txt
+
+# Ignore all files with extension
+*.log
+
+# Ignore entire directory
+node_modules/
+dist/
+
+# Ignore directory recursively
+**/temp/
+
+# Ignore files in specific path
+pkg/oicp-mcp/docs/
+
+# Negate patterns (don't ignore)
+!important-file.log
+```
+
+## Common Patterns
+
+### Build Output
+
+```
+dist/
+build/
+out/
+*.tsbuildinfo
+```
+
+### Dependencies
+
+```
+node_modules/
+.pnp/
+.yarn/
+```
+
+### Documentation
+
+```
+docs/
+*.md  # Be careful - might hide important docs
+```
+
+### Logs and Cache
+
+```
+*.log
+logs/
+.cache/
+.temp/
+```
+
+### Environment Files
+
+```
+.env
+.env.*
+!.env.example  # Keep example file
+```
+
+### IDE and System Files
+
+```
+.DS_Store
+.vscode/
+.idea/
+```
+
+## Best Practices
+
+1. **Keep it minimal**: Only ignore what truly shouldn't be in AI context
+   - Large generated files
+   - Binary files
+   - Vendor/dependency code
+   - Build artifacts
+
+2. **Don't ignore important code**: Avoid ignoring:
+   - Source code you're actively developing
+   - Configuration files you need to reference
+   - Important documentation
+
+3. **Consider file size**: Large files slow down indexing
+   - Generated API docs with thousands of files
+   - Large data files
+   - Binary assets
+
+4. **Sync with .gitignore**: Most `.gitignore` patterns make sense in `.cursorignore`
+   - But `.cursorignore` can be more aggressive
+   - You might want docs in git but not in Cursor's index
+
+## When to Use
+
+Use `.cursorignore` when:
+
+- You have large documentation folders that don't need AI context
+- Generated files are cluttering search results
+- Build output is confusing the AI
+- Third-party code is appearing in suggestions
+
+## Example for This Project
+
+```
+# Documentation sources (large YAML collections)
+pkg/oicp-mcp/docs/
+
+# Build output
+dist/
+build/
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+logs/
+
+# Cache
+.cache/
+*.tsbuildinfo
+```
+
+## Differences from .gitignore
+
+| Feature    | .gitignore        | .cursorignore       |
+| ---------- | ----------------- | ------------------- |
+| Purpose    | Version control   | IDE indexing        |
+| Scope      | What goes in repo | What AI sees        |
+| Strictness | Should be minimal | Can be aggressive   |
+| Examples   | Secrets, builds   | Docs, vendored code |
+
+## Checking What's Ignored
+
+1. After creating/updating `.cursorignore`
+2. Restart Cursor or reload window
+3. Try searching for files that should be ignored
+4. They should not appear in results
+
+## Troubleshooting
+
+**Files still appearing?**
+
+- Restart Cursor
+- Check file path syntax (use `/` separators)
+- Ensure `.cursorignore` is in project root
+
+**Too much ignored?**
+
+- Use negation patterns: `!important-file.txt`
+- Be more specific with paths
+- Review patterns for wildcards
+
+**Need to temporarily include ignored files?**
+
+- Comment out the pattern with `#`
+- Restart Cursor
+- Remember to uncomment later

@@ -1,0 +1,28 @@
+# Cursor Ignore File
+# Similar to .gitignore, this tells Cursor which files/folders to omit from indexing
+
+docs/
+
+# Documentation sources (large YAML collections)
+pkg/oicp-mcp/docs/
+
+# Build output
+dist/
+build/
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+logs/
+
+# Cache
+.cache/
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.*
+!.env.example
+

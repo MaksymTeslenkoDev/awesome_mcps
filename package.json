@@ -1,0 +1,37 @@
+{
+  "name": "awesome_mcps",
+  "version": "1.0.0",
+  "description": "Awesome MCPs servers playground",
+  "homepage": "https://github.com/MaksymTeslenkoDev/awesome_mcps#readme",
+  "bugs": {
+    "url": "https://github.com/MaksymTeslenkoDev/awesome_mcps/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MaksymTeslenkoDev/awesome_mcps.git"
+  },
+  "license": "MIT",
+  "author": "Maksym Teslenko",
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier . --write",
+    "lint:fix": "eslint --fix",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "node --test --experimental-transform-types ./test/unit/**.test.ts",
+    "copy:resources": "rsync -avm --filter=':- .deployignore' --exclude='*.ts' --exclude node_modules ./"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.1",
+    "eslint": "^9.37.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "jiti": "^2.6.1",
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.0"
+  },
+  "dependencies": {},
+  "resolutions": {
+    "typescript": "^5.9.3"
+  }
+}

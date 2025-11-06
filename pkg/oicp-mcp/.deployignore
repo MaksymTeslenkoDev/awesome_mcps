@@ -1,0 +1,5 @@
+tsconfig.json
+yarn-error.log
+.deployignore
+local-config.json
+dist

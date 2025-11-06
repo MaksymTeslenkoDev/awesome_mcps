@@ -1,0 +1,31 @@
+{
+  "name": "oicp-mcp",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "tsx --watch ./server.ts",
+    "build": "rm -rf dist && tsc && yarn copy:resources",
+    "copy:resources": "rsync -avm --filter=':- .deployignore' --exclude='*.ts' --exclude node_modules ./dist/ ./dist/pkg/oicp-mcp && cp package.json dist/pkg/oicp-mcp/package.json && yarn copy:parent-resources",
+    "copy:parent-resources": "pushd ../.. && yarn copy:resources pkg/oicp-mcp/dist && popd",
+    "test": "CONFIG_PATH=local.test.config.json tsx --test ./tests/**/*.test.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.21.0",
+    "fastify": "^5.6.1",
+    "fastify-cli": "^7.4.0",
+    "fastify-plugin": "^5.1.0",
+    "pino-pretty": "^13.1.2",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.1",
+    "jiti": "^2.6.1",
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.0"
+  }
+}
