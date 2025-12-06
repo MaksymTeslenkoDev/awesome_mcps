@@ -1,1 +1,5 @@
-{"mcpServers": {"inkeepMcp": {"url": "https://mcp.inkeep.com/zod/mcp"}}}
+{
+  "mcpServers": {
+    "inkeepMcp": {"url": "https://mcp.inkeep.com/zod/mcp"}
+  }
+}

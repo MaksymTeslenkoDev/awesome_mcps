@@ -1,0 +1,268 @@
+---
+inclusion: fileMatch
+fileMatchPattern: ['pkg/oicp-mcp/**/*']
+---
+
+# OICP-MCP Server - Directory Structure and Guidelines
+
+## Project Overview
+
+This is an MCP (Model Context Protocol) server for Hubject OICP (Open InterCharge Protocol) v2.3 integration. It provides tools for AI agents to search and retrieve information about OICP integration services, data schemas, and modules for both CPO (Charge Point Operator) and EMP (e-Mobility Provider) roles.
+
+## Technology Stack
+
+- **Node.js**: v22+
+- **TypeScript**: v5
+- **Package Manager**: yarn v1
+- **Web Framework**: Fastify v5
+- **Protocol**: Model Context Protocol (MCP) SDK
+- **Validation**: Zod
+
+## Source Directory Structure
+
+```
+pkg/oicp-mcp/
+├── server.ts              # Entry point - initializes Fastify server
+├── app.ts                 # Main application - registers routes and plugins
+├── config.loader.ts       # Configuration loader
+├── config/                # Configuration files
+│   ├── index.ts          # Config types, validation with Zod, log levels
+│   └── server-options.ts # Fastify server options
+├── plugins/               # Fastify plugins
+│   └── mcp.ts            # MCP server plugin - handles MCP protocol
+├── routes/                # API route handlers
+│   └── root.ts           # Root routes (e.g., /ping endpoint)
+├── tests/                 # Test files
+│   ├── alive.test.ts     # Server alive/health tests
+│   ├── helper.ts         # Test utilities and helpers
+│   └── local.test.config.json # Test-specific configuration
+├── oicp/                  # OICP OpenAPI specifications
+│   └── v2.3/
+│       ├── cpo/          # CPO v2.3 API documentation
+│       │   ├── openapi.yaml # CPO OpenAPI specification
+│       │   ├── index.html   # CPO HTML documentation
+│       │   └── images/      # 39 diagram images
+│       └── emp/          # EMP v2.3 API documentation
+│           ├── openapi.yaml # EMP OpenAPI specification
+│           ├── index.html   # EMP HTML documentation
+│           └── images/      # 39 diagram images
+├── docs/                  # Documentation directory (currently empty)
+├── dist/                  # Compiled output (gitignored)
+├── node_modules/          # Dependencies (gitignored)
+├── local.config.json      # Local runtime configuration
+├── package.json           # Package configuration
+├── tsconfig.json          # TypeScript configuration (extends root)
+├── yarn.lock              # Yarn dependency lockfile
+└── README.MD              # Project documentation
+```
+
+## Important Files and Their Purpose
+
+### Core Application Files
+
+1. **`server.ts`** - Entry Point
+   - Initializes the Fastify server
+   - Loads configuration
+   - Registers the main app
+   - Starts the server listening on configured host:port
+   - Default: `0.0.0.0:2772`
+
+2. **`app.ts`** - Application Core
+   - Registers all routes with prefix `/oicp/v2.3/`
+   - Main FastifyPluginAsync that orchestrates the application
+   - Connects configuration to route handlers
+
+3. **`plugins/mcp.ts`** - MCP Protocol Handler
+   - Implements the Model Context Protocol server
+   - Provides `/mcp` POST endpoint for MCP communication
+   - Uses StreamableHTTPServerTransport for HTTP-based MCP
+   - Core integration point for AI agents
+
+### Configuration Files
+
+1. **`config.loader.ts`**
+   - Loads configuration from JSON file (default: `local.config.json`)
+   - Supports CONFIG_PATH environment variable to override config file
+   - Validates configuration using Zod schema
+   - Returns validated AppConfig
+
+2. **`config/index.ts`**
+   - Defines AppConfig type using Zod schema
+   - Defines log levels: `info`, `debug`, `error`, `trace`
+   - Exports `configSchema` for runtime validation
+   - Exports `validateConfig()` function for config validation
+   - Type-safe configuration structure with validation
+
+3. **`config/server-options.ts`**
+   - Provides Fastify server options
+   - Configures logging (level and pretty print) based on AppConfig
+
+4. **`local.config.json`**
+   - Runtime configuration file
+   - Default settings: `port: 2772`, `host: "0.0.0.0"`
+   - Logger settings: `logLevel: "info"`, `pretty: true`
+   - Can be overridden via CONFIG_PATH environment variable
+
+### Routes
+
+1. **`routes/root.ts`**
+   - Health check endpoint: `POST /oicp/v2.3/ping`
+   - Returns "pong"
+   - Logs ping requests
+
+### API Documentation
+
+1. **`oicp/` Directory**
+   - Contains OpenAPI specifications for OICP v2.3
+   - Separate specs for CPO and EMP roles
+   - HTML documentation with diagrams and images
+   - Each role has 39+ diagram images for visualization
+
+### Testing Files
+
+1. **`tests/alive.test.ts`**
+   - Health check and server alive tests
+   - Tests server initialization and basic functionality
+
+2. **`tests/helper.ts`**
+   - Test utilities and helper functions
+   - Shared test setup and teardown logic
+
+3. **`tests/local.test.config.json`**
+   - Test-specific configuration
+   - Separate from production config for isolated testing
+
+## Environment Variables
+
+- **`CONFIG_PATH`**: Path to configuration JSON file (default: `local.config.json`)
+  - Example: `CONFIG_PATH=local.test.config.json yarn test`
+  - Used to switch between different configurations (dev, test, prod)
+
+## Development Guidelines
+
+### File Organization
+
+1. **Routes**: Place all route handlers in `routes/` directory
+   - Group related routes in separate files
+   - Export as default function accepting FastifyInstance
+
+2. **Plugins**: Place Fastify plugins in `plugins/` directory
+   - Use `fastify-plugin` wrapper for proper encapsulation
+   - Export with proper Fastify version compatibility
+
+3. **Configuration**: Keep all config-related code in `config/` directory
+   - Use TypeScript types for type-safe configuration
+   - Separate concerns (server options, app config, etc.)
+
+### Naming Conventions
+
+- Use kebab-case for file names: `config-loader.ts`
+- Use PascalCase for types/interfaces: `AppConfig`
+- Use camelCase for functions and variables: `loadConfig()`
+- Use SCREAMING_SNAKE_CASE for constants: `INFO`, `DEBUG`
+
+### API Structure
+
+- All OICP endpoints are prefixed with `/oicp/v2.3/`
+- MCP endpoint is at `/oicp/v2.3/mcp` (POST)
+- Health check is at `/oicp/v2.3/ping` (POST)
+
+### Build Process
+
+1. **Development**: `yarn dev` - runs with tsx watch mode
+2. **Build**: `yarn build` - compiles TypeScript and copies resources
+   - Cleans `dist/` directory
+   - Runs TypeScript compiler
+   - Copies non-TS files excluding node_modules
+   - Uses `.deployignore` for resource filtering
+3. **Testing**: `yarn test` - runs test suite
+   - Uses tsx test runner with Node.js native test support
+   - Loads test configuration from `CONFIG_PATH=local.test.config.json`
+   - Runs all `*.test.ts` files in `tests/` directory
+
+### Key Dependencies
+
+- `@modelcontextprotocol/sdk`: MCP protocol implementation
+- `fastify`: Web framework
+- `fastify-plugin`: Plugin system
+- `zod`: Runtime type validation
+
+### OICP Protocol Information
+
+- **CPO (Charge Point Operator)**: Manages charging stations
+- **EMP (e-Mobility Provider)**: Manages EV driver accounts
+- **Protocol Version**: 2.3
+- **Official Docs**:
+  - CPO: https://github.com/hubject/oicp-cpo-2.3-api-doc
+  - EMP: https://github.com/hubject/oicp-emp-2.3-api-doc
+
+## Common Operations
+
+### Key eRoaming Operations
+
+Based on the API documentation structure, main operations include:
+
+**CPO Operations:**
+
+- Authorization (5 operations)
+- Charging Notifications
+- EVSE Data Management
+- EVSE Status Management
+- Dynamic Pricing (2 operations)
+- Reservation Management (2 operations)
+
+**EMP Operations:**
+
+- Authentication Data Management
+- Authorization (6 operations)
+- Charging Notifications
+- EVSE Data Retrieval
+- EVSE Status Retrieval
+- Dynamic Pricing (2 operations)
+- Reservation Management (2 operations)
+
+### Adding New MCP Resources
+
+When adding new MCP resources or tools:
+
+1. Define schemas in the MCP server initialization
+2. Implement handlers in the appropriate route files
+3. Reference OICP OpenAPI specs in `oicp/` for schema validation
+4. Use Zod for runtime validation
+
+### Working with OpenAPI Specs
+
+- Primary specs are in `oicp/v2.3/cpo/openapi.yaml` and `oicp/v2.3/emp/openapi.yaml`
+- All schemas follow OICP v2.3 standard from Hubject
+
+## Testing
+
+Test suite is configured using Node.js native test runner with tsx:
+
+- **Run tests**: `yarn test`
+- **Test directory**: `tests/`
+- **Test pattern**: `**/*.test.ts`
+- **Test configuration**: Uses `local.test.config.json` via CONFIG_PATH environment variable
+
+Current test coverage:
+
+- ✅ Server alive/health tests (`alive.test.ts`)
+- ✅ Test helpers and utilities (`helper.ts`)
+
+Consider expanding test coverage:
+
+- Unit tests for route handlers
+- Integration tests for MCP protocol
+- Schema validation tests against OICP specs
+- E2E tests for complete workflows
+
+## Notes
+
+- The `dist/` directory contains compiled JavaScript - do not edit directly
+- The project uses rsync for resource copying during build
+- OICP documentation is extensive with 39+ diagram images for each role (CPO and EMP)
+- TypeScript configuration extends from the root monorepo configuration
+- The `docs/` directory exists but is currently empty - placeholder for future documentation
+- All configuration is validated at runtime using Zod schemas for type safety
+- The server listens on `0.0.0.0:2772` by default (configurable via `local.config.json`)
+- MCP endpoint follows HTTP transport pattern from Model Context Protocol specification

@@ -1,0 +1,143 @@
+---
+inclusion: fileMatch
+fileMatchPattern: ['pkg/oicp-mcp/**/*']
+---
+
+# OICP-MCP Dependency Stack
+
+## Stack Snapshot
+
+- **Runtime**: Node.js 22 LTS (Fastify 5 targets Node 20+, the repo standardises on Node 22)
+- **Language**: TypeScript 5.9 with `module`/`moduleResolution` set to `NodeNext`
+- **Framework**: Fastify 5 for the HTTP server and plugin ecosystem
+- **Protocol**: Model Context Protocol via `@modelcontextprotocol/sdk` 1.x
+- **Validation**: Zod 4 for runtime schemas with inferred types
+- **Tooling**: `tsx` 4 for dev/test runner, `typescript-eslint` 8 for linting, `prettier` 3 for formatting
+
+## Production Dependencies
+
+### @modelcontextprotocol/sdk (`^1.21.0`)
+
+- **Role**: Implements MCP transport, resource, and tool abstractions.
+- **Best practices**:
+  - Register tools/resources through the SDK helpers rather than hand-coding protocol envelopes.
+  - Surface structured errors so MCP clients receive actionable diagnostics.
+  - Keep the SDK current; patch releases often include protocol clarifications and security fixes.
+
+### fastify (`^5.6.1`)
+
+- **Role**: Primary HTTP server.
+- **Compatibility**: Requires Node ≥20. Minimal friction on Node 22 LTS (recommended baseline for this repo).
+- **Best practices**:
+  - Use explicit `fastify.register()` boundaries for routes/plugins so encapsulation stays predictable.
+  - Lean on Fastify schemas (or Zod adapters) to get automatic validation + serialization.
+  - Configure the built-in Pino logger via `config/server-options.ts`; prefer structured JSON in production.
+  - Keep async handlers clean; return values instead of calling `reply.send()` manually when possible.
+
+### fastify-plugin (`^5.1.0`)
+
+- **Role**: Ensures custom plugins share the same encapsulation context.
+- **Best practices**:
+  - Wrap every reusable plugin (for example `plugins/mcp.ts`) with `fastify-plugin` and set the `fastify` compatibility range.
+  - Export strongly typed decorators so downstream code gets inference when calling `fastify.decorate`/`decorateRequest`.
+
+### fastify-cli (`^7.4.0`)
+
+- **Role**: Local scaffolding and inspection.
+- **Best practices**:
+  - Use `fastify start` only for debugging; production should boot via `server.ts` after compiling with `tsc`.
+  - Keep the CLI version aligned with the Fastify major release to avoid warning noise.
+
+### zod (`^4.1.12`)
+
+- **Role**: Validation for config, route payloads, and MCP data.
+- **Best practices**:
+  - Prefer `z.strictObject` or `.passthrough(false)` over legacy `.strict()` calls to embrace v4 semantics.
+  - Co-locate schemas with the modules that consume them and export `z.infer` types for reuse.
+  - Use `.superRefine()` when translating OICP edge cases into detailed issue trees.
+  - Convert to OpenAPI JSON on demand to keep documentation in sync and avoid manual drift.
+
+### pino-pretty (`^13.1.2`)
+
+- **Role**: Development-only log prettifier.
+- **Best practices**:
+  - Guard usage behind `NODE_ENV !== "production"`; the pretty transport adds measurable overhead.
+  - Keep timestamps enabled while pretty-printing so logs correlate across services.
+
+## Development Dependencies
+
+### typescript (`^5.9.3`)
+
+- The package extends the monorepo `tsconfig.json`, which sets `target: "ESNext"`, `module: "NodeNext"`, `moduleResolution: "nodenext"`, `skipLibCheck: true`, and emits source maps.
+- Consider enabling `incremental: true` for faster CI builds when `tsc --build` workflows are introduced.
+
+### typescript-eslint (`^8.46.0`)
+
+- Pairs with ESLint 9 and TypeScript 5.9.
+- Use the flat config API:
+
+```typescript
+import tseslint from "typescript-eslint";
+
+export default tseslint.config(...tseslint.configs.recommended, {
+  languageOptions: {parserOptions: {project: true, tsconfigRootDir: import.meta.dirname}},
+});
+```
+
+### tsx (`^4.20.6`)
+
+- Powers `yarn dev` (`tsx --watch server.ts`) and `yarn test` (`tsx --test ./tests/**/*.test.ts`).
+- Keep it to local/test environments; production should run the compiled output from `tsc`.
+
+### @types/node (`^24.7.1`)
+
+- Matches the Node 22 API surface. Upgrade in lockstep with Node runtime bumps.
+
+### jiti (`^2.6.1`)
+
+- Used across the monorepo for loading ESM/TypeScript config at runtime. Import lazily in tooling to keep server bundles slim.
+
+### prettier (`^3.6.2`)
+
+- Format-on-save should respect the shared config (`semi: true`, `singleQuote: true`, `trailingComma: "es5"`, `printWidth: 100`).
+- Combine with ESLint via `eslint-config-prettier` to avoid rule overlap.
+
+## Dependency Management Guidelines
+
+- Commit `yarn.lock` and install with `yarn install --frozen-lockfile` in CI for deterministic builds.
+- Run `yarn npm audit` (or `npm audit`) regularly; Fastify and MCP SDK publish security fixes outside major releases.
+- Schedule quarterly hygiene: `yarn upgrade-interactive --latest` plus `npx depcheck` to prune unused packages.
+- After bumping major versions, run `yarn test` and manually exercise `/oicp/v2.3/mcp` to confirm protocol compatibility.
+
+## Environment Tips
+
+- **Development**: use `yarn dev`, enable `pino-pretty`, and rely on source maps for debugging.
+- **Testing**: `yarn test` leverages the Node test runner via `tsx` and reads `CONFIG_PATH=local.test.config.json`.
+- **Production**: run `yarn build` (cleans, compiles, copies resources), disable `pino-pretty`, and deploy the contents of `dist/pkg/oicp-mcp` on Node 22 with a process manager.
+
+## Compatibility Matrix
+
+| Dependency                | Range   | Node.js Compatibility | Notes                                                                     |
+| ------------------------- | ------- | --------------------- | ------------------------------------------------------------------------- |
+| fastify                   | ^5.6.1  | ≥20 (tested on 22)    | Breaking changes vs 4.x; rely on encapsulation and schema-based replies   |
+| @modelcontextprotocol/sdk | ^1.21.0 | ≥18                   | Tracks MCP spec; patch releases often tighten protocol guarantees         |
+| zod                       | ^4.1.12 | ≥18                   | Adopt v4 helpers (`strictObject`, `superRefine`); avoid deprecated merges |
+| tsx                       | ^4.20.6 | ≥18                   | Dev/test runner only                                                      |
+| typescript                | ^5.9.3  | ≥18                   | Aligns with NodeNext module resolution used in repo                       |
+
+**Minimum runtime**: Node.js 20, with Node 22 LTS recommended for parity with project tooling and Fastify 5 support.
+
+## Reference Links
+
+- [Fastify Documentation](https://fastify.dev/)
+- [Model Context Protocol](https://modelcontextprotocol.io/)
+- [Zod v4 Documentation](https://zod.dev/v4)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [Pino Logger](https://getpino.io/)
+
+## Summary
+
+- Fastify 5 + `@modelcontextprotocol/sdk` 1 deliver the HTTP + MCP foundation.
+- Zod 4 backs configuration and payload validation with inferred TypeScript types.
+- TypeScript 5.9, tsx 4, and typescript-eslint 8 keep the developer loop fast while maintaining type safety.
+- Standardise on Node 22, pin lockfiles, and audit quarterly to stay secure and in sync with upstream changes.
