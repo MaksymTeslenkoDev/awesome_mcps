@@ -1,8 +1,8 @@
 ---
-name: oicp-power
-displayName: OICP Protocol Assistant
-description: Access Hubject's Open InterCharge Protocol (OICP) v2.3 documentation for EV charging infrastructure integration
-keywords: ["oicp","ev","charging","electric vehicle","hubject","cpo","emp","charge point","e-mobility"]
+name: "oicp"
+displayName: "OICP Protocol Assistant"
+description: "Access Hubject's Open InterCharge Protocol (OICP) v2.3 documentation for EV charging infrastructure integration"
+keywords: ["oicp","ev","charging","electric vehicle","hubject","cpo","emp","charge point","e-mobility","e-roaming"]
 ---
 
 # OICP Protocol Assistant
