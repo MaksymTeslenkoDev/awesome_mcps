@@ -1,3 +1,23 @@
+---
+name: oicp-power
+version: 1.0.0
+displayName: OICP Protocol Assistant
+description: Access Hubject's Open InterCharge Protocol (OICP) v2.3 documentation for EV charging infrastructure integration
+keywords:
+  - oicp
+  - ev
+  - charging
+  - electric vehicle
+  - hubject
+  - cpo
+  - emp
+  - charge point
+  - e-mobility
+author: OICP MCP Contributors
+license: MIT
+repository: https://github.com/MaksymTeslenkoDev/awesome_mcps/blob/master/oicp-power
+---
+
 # OICP Protocol Assistant
 
 ## Overview

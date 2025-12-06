@@ -16,7 +16,7 @@
   ],
   "author": "OICP MCP Contributors",
   "license": "MIT",
-  "repository": "https://github.com/yourusername/oicp-power",
+  "repository": "https://github.com/MaksymTeslenkoDev/awesome_mcps/blob/master/oicp-power",
   "mcpServers": {
     "oicp-mcp-server": {
       "command": "node",
