@@ -7,8 +7,6 @@ keywords: ["oicp","ev","charging","electric vehicle","hubject","cpo","emp","char
 
 # OICP Protocol Assistant
 
-## Overview
-
 Access Hubject's Open InterCharge Protocol (OICP) v2.3 documentation for EV charging infrastructure integration. OICP enables interoperability between Charge Point Operators (CPO) and e-Mobility Providers (EMP).
 
 This power provides:
@@ -17,296 +15,130 @@ This power provides:
 - 78+ technical diagrams via `oicp://` URI scheme
 - Schema definitions with validation rules
 
-## Onboarding
+# Onboarding
 
-### First Steps
+## Step 1: Verify Prerequisites
 
-1. **Explore available services:**
-   ```
-   Ask: "What OICP services are available for CPO?"
-   ```
-   Uses `list_services` tool to show service categories.
+Before using OICP Protocol Assistant, ensure the following are installed:
 
-2. **Search for operations:**
-   ```
-   Ask: "Find authorization operations for CPO"
-   ```
-   Uses `search_oicp_operations` to find relevant endpoints.
+- **Node.js v20+**: Required to run the MCP server
+  - Verify with: `node --version`
+  - **CRITICAL**: If Node.js is not installed or version is below v20, DO NOT proceed
+- **Yarn v1**: Package manager for dependencies
+  - Verify with: `yarn --version`
 
-3. **Get operation details:**
-   ```
-   Ask: "Show me details for eRoamingAuthorizeStart in CPO"
-   ```
-   Uses `get_operation_details` for complete specifications.
+## Step 2: Explore Available Services
 
-### Quick Reference
+Start by discovering what OICP services are available:
 
-**CPO Role** - Charge Point Operators:
-- Push EVSE data and status
-- Handle authorization requests
-- Send charging notifications
-- Manage reservations
-
-**EMP Role** - e-Mobility Providers:
-- Pull EVSE data and status
-- Send authorization requests
-- Manage authentication data
-- Retrieve charge detail records
-
-### Common Workflows
-
-See steering files for detailed guides:
-- `getting-started.md` - Basic queries and setup
-- `cpo-workflows.md` - CPO-specific workflows
-- `emp-workflows.md` - EMP-specific workflows
-
-## Available Tools
-
-This power exposes 6 MCP tools for querying OICP documentation:
-
-### 1. search_oicp_operations
-
-Search for OICP API operations by keyword.
-
-**Parameters:**
-- `query` (string, required): Search term to find operations
-- `role` (string, optional): Filter by role - "cpo" or "emp"
-
-**Example:**
-```json
-{
-  "query": "authorize",
-  "role": "cpo"
-}
+```
+Ask: "What OICP services are available for CPO?"
 ```
 
-**Returns:** Array of matching operations with operationId, summary, method, and path.
+This uses the `list_services` tool to show service categories like:
+- eRoamingAuthorization
+- eRoamingData
+- eRoamingEvseStatus
+- eRoamingChargingNotifications
+- eRoamingReservation
 
-**Use when:** You need to find specific API endpoints related to authorization, charging, data management, etc.
+## Step 3: Search for Operations
 
----
+Find specific API endpoints by keyword:
 
-### 2. get_operation_details
-
-Retrieve complete details for a specific OICP operation.
-
-**Parameters:**
-- `operationId` (string, required): The operation identifier (e.g., "eRoamingAuthorizeStart")
-- `role` (string, required): The role context - "cpo" or "emp"
-
-**Example:**
-```json
-{
-  "operationId": "eRoamingAuthorizeStart",
-  "role": "cpo"
-}
+```
+Ask: "Find authorization operations for CPO"
 ```
 
-**Returns:** Full operation specification including description, parameters, request body schema, responses, and examples.
+This uses `search_oicp_operations` to find relevant endpoints like:
+- eRoamingAuthorizeStart
+- eRoamingAuthorizeStop
+- eRoamingAuthorizeRemoteStart
 
-**Use when:** You need detailed information about a specific endpoint's requirements and behavior.
+## Step 4: Get Detailed Information
 
----
+Retrieve complete specifications for an operation:
 
-### 3. get_data_schema
-
-Access detailed schema definitions for OICP data types.
-
-**Parameters:**
-- `schemaName` (string, required): Name of the schema (e.g., "EvseDataRecord", "eRoamingAuthorizeStart")
-- `role` (string, required): The role context - "cpo" or "emp"
-
-**Example:**
-```json
-{
-  "schemaName": "EvseDataRecord",
-  "role": "cpo"
-}
+```
+Ask: "Show me details for eRoamingAuthorizeStart in CPO"
 ```
 
-**Returns:** Complete schema definition with properties, types, validation rules, and descriptions.
+This uses `get_operation_details` to provide:
+- Full endpoint description
+- Request/response schemas
+- Parameters and examples
+- HTTP method and path
 
-**Use when:** You need to understand data structures, validation requirements, or field definitions.
+# Best Practices
 
----
+## Understanding OICP Roles
 
-### 4. list_services
+**CPO (Charge Point Operator)** - Operates charging infrastructure:
+- Push EVSE data and status to the network
+- Handle authorization requests from EMPs
+- Send charging notifications and CDRs
+- Manage reservations and remote operations
 
-Browse available OICP service categories.
+**EMP (e-Mobility Provider)** - Provides charging services to drivers:
+- Pull EVSE data and status from the network
+- Send authorization requests for charging sessions
+- Manage customer authentication data
+- Retrieve charge detail records for billing
 
-**Parameters:**
-- `role` (string, required): The role context - "cpo" or "emp"
+## Searching Effectively
 
-**Example:**
-```json
-{
-  "role": "cpo"
-}
+**Start broad, then narrow:**
+1. Use `list_services` to see available categories
+2. Use `get_operations_by_tag` to explore specific service areas
+3. Use `search_oicp_operations` with keywords for targeted searches
+
+**Search by concept:**
+- Use natural language terms: "charging", "status", "pricing", "identification"
+- Try both singular and plural forms
+- Search in both CPO and EMP contexts when relevant
+
+## Working with Schemas
+
+**Always validate data structures:**
+```
+Ask: "Show me the EvseDataRecord schema for CPO"
 ```
 
-**Returns:** Array of service tags like "eRoamingAuthorization", "eRoamingData", "eRoamingEvseStatus", etc.
+This ensures you understand:
+- Required vs optional fields
+- Data types and formats
+- Validation rules and constraints
+- Field descriptions and usage
 
-**Use when:** You want to explore what categories of operations are available in OICP.
+## Example: Implementing Authorization Flow
 
----
-
-### 5. search_schemas
-
-Find OICP data schemas by keyword.
-
-**Parameters:**
-- `query` (string, required): Search term to find schemas
-- `role` (string, optional): Filter by role - "cpo" or "emp"
-
-**Example:**
-```json
-{
-  "query": "identification",
-  "role": "emp"
-}
+```
+1. Ask: "Find authorization operations for CPO"
+2. Ask: "Show me details for eRoamingAuthorizeStart in CPO"
+3. Ask: "Show me the eRoamingAuthorizeStart schema for CPO"
+4. Ask: "Show me the AuthorizationStart schema for CPO"
 ```
 
-**Returns:** Array of matching schemas with name and description.
+This workflow gives you complete information to implement the authorization endpoint.
 
-**Use when:** You need to find data types related to specific concepts like identification, pricing, status, etc.
+## Example: Managing EVSE Data
 
----
-
-### 6. get_operations_by_tag
-
-List all operations within a specific service category.
-
-**Parameters:**
-- `tag` (string, required): Service tag name (e.g., "eRoamingAuthorization")
-- `role` (string, required): The role context - "cpo" or "emp"
-
-**Example:**
-```json
-{
-  "tag": "eRoamingAuthorization",
-  "role": "cpo"
-}
+```
+1. Ask: "What operations are in eRoamingData for CPO?"
+2. Ask: "Show me details for eRoamingPushEvseData in CPO"
+3. Ask: "Show me the EvseDataRecord schema for CPO"
 ```
 
-**Returns:** Array of operations in that service category with operationId, summary, method, and path.
+This provides everything needed to push EVSE data to the network.
 
-**Use when:** You want to see all endpoints related to a specific service area.
+# When to Load Steering Files
 
-## Available Resources
+- Getting started with OICP → `getting-started.md`
+- Implementing CPO operations (push data, handle auth, send notifications) → `cpo-workflows.md`
+- Implementing EMP operations (pull data, send auth, retrieve CDRs) → `emp-workflows.md`
 
-This power provides access to OICP documentation through the `oicp://` URI scheme.
+# MCP Configuration
 
-### URI Scheme
-
-Resources are accessed using the format: `oicp://{role}/{resource-type}/{optional-path}`
-
-Where:
-- `{role}` is either "cpo" or "emp"
-- `{resource-type}` is "spec", "docs", or "images"
-- `{optional-path}` is used for specific image files
-
-### CPO Resources
-
-**OpenAPI Specification:**
-- URI: `oicp://cpo/spec`
-- Format: YAML
-- Content: Complete CPO API specification with all endpoints, schemas, and examples
-
-**HTML Documentation:**
-- URI: `oicp://cpo/docs`
-- Format: HTML
-- Content: Rendered documentation with navigation and visual formatting
-
-**Diagram Images:**
-- URI: `oicp://cpo/images/{filename}`
-- Format: PNG
-- Content: 39 technical diagrams including:
-  - Authorization workflows (authorize_evco.png, authorizestart_online.png, etc.)
-  - Data push operations (pushevsedata.png, pushevsestatus.png)
-  - Charging notifications (chargingnotificationstart.png, etc.)
-  - Reservation flows (remotereservationstart.png, etc.)
-  - Architecture diagrams (security.png, web_services.png)
-
-### EMP Resources
-
-**OpenAPI Specification:**
-- URI: `oicp://emp/spec`
-- Format: YAML
-- Content: Complete EMP API specification with all endpoints, schemas, and examples
-
-**HTML Documentation:**
-- URI: `oicp://emp/docs`
-- Format: HTML
-- Content: Rendered documentation with navigation and visual formatting
-
-**Diagram Images:**
-- URI: `oicp://emp/images/{filename}`
-- Format: PNG
-- Content: 39 technical diagrams including:
-  - Authorization workflows
-  - Data pull operations (pullevsedata.png, pullevsestatus.png)
-  - Authentication data (pushauthentificationdata.png)
-  - CDR retrieval (getcdr.png, eroaminggetcdrs.png)
-  - Architecture diagrams
-
-### Resource Access Examples
-
-**Accessing the CPO OpenAPI spec:**
-```
-oicp://cpo/spec
-```
-
-**Accessing a specific diagram:**
-```
-oicp://cpo/images/authorizestart_online.png
-```
-
-**Accessing EMP documentation:**
-```
-oicp://emp/docs
-```
-
-## Usage Examples
-
-**Search operations:**
-```
-"Find authorization operations for CPO"
-```
-Returns: eRoamingAuthorizeStart, eRoamingAuthorizeStop, etc.
-
-**Get schema details:**
-```
-"Show me the EvseDataRecord schema for CPO"
-```
-Returns: Complete schema with fields, types, and validation rules.
-
-**List operations by service:**
-```
-"What operations are in eRoamingChargingNotifications for CPO?"
-```
-Returns: ChargingNotificationStart, ChargingNotificationProgress, ChargingNotificationEnd, ChargingNotificationError.
-
-**Access resources:**
-```
-"Get the CPO OpenAPI specification"
-```
-Returns: Content from `oicp://cpo/spec`
-
-## Installation
-
-**Prerequisites:** Node.js v20+, Yarn v1, MCP-compatible client
-
-**From source:**
-```bash
-git clone https://github.com/MaksymTeslenkoDev/awesome_mcps.git
-cd awesome_mcps
-yarn install
-cd pkg/oicp-mcp
-yarn build
-yarn start
-```
-
-**MCP Configuration** (`mcp.json`):
 ```json
 {
   "mcpServers": {
@@ -321,11 +153,7 @@ yarn start
 }
 ```
 
-**Verify:** Ask "List the available OICP services for CPO role"
-
-## Configuration
-
-**Server config** (`local.config.json`):
+**Server Configuration** (`local.config.json`):
 ```json
 {
   "server": {
@@ -339,27 +167,19 @@ yarn start
 }
 ```
 
-**Environment variables:**
-- `CONFIG_PATH` - Config file path (default: `./local.config.json`)
+**Environment Variables:**
+- `CONFIG_PATH` - Path to config file (default: `./local.config.json`)
+- `NODE_ENV` - Environment mode (affects logging)
 
-## Troubleshooting
+**Verification:**
+Ask your AI assistant: "List the available OICP services for CPO role"
 
-**Server won't start:**
-- Check Node.js version: `node --version` (requires v20+)
-- Verify port 2772 is available
-- Run `yarn install` to ensure dependencies
+**Troubleshooting:**
+- Server won't start → Check Node.js version: `node --version` (requires v20+)
+- Tools not appearing → Restart MCP client and verify server: `curl http://localhost:2772/oicp/v2.3/ping`
+- No search results → Verify role is "cpo" or "emp", try broader terms
 
-**Tools not appearing:**
-- Restart MCP client
-- Check server: `curl http://localhost:2772/oicp/v2.3/ping`
-- Review MCP client logs
-
-**No search results:**
-- Verify role is "cpo" or "emp"
-- Try broader search terms
-- Use `list_services` first
-
-**Debug mode:**
+**Debug Mode:**
 ```json
 {
   "logger": {
@@ -369,9 +189,7 @@ yarn start
 }
 ```
 
-## Resources
-
-- **CPO API**: https://github.com/hubject/oicp-cpo-2.3-api-doc
-- **EMP API**: https://github.com/hubject/oicp-emp-2.3-api-doc
-- **Issues**: https://github.com/MaksymTeslenkoDev/awesome_mcps/issues
-- **License**: MIT
+**Resources:**
+- CPO API: https://github.com/hubject/oicp-cpo-2.3-api-doc
+- EMP API: https://github.com/hubject/oicp-emp-2.3-api-doc
+- Issues: https://github.com/MaksymTeslenkoDev/awesome_mcps/issues
