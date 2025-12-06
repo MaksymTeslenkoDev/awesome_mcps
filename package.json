@@ -18,7 +18,8 @@
     "lint:fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
     "test:unit": "node --test --experimental-transform-types ./test/unit/**.test.ts",
-    "copy:resources": "rsync -avm --filter=':- .deployignore' --exclude='*.ts' --exclude node_modules ./"
+    "copy:resources": "rsync -avm --filter=':- .deployignore' --exclude='*.ts' --exclude node_modules ./",
+    "release:oicp-power": "./scripts/release-power.sh"
   },
   "devDependencies": {
     "@types/node": "^24.7.1",
