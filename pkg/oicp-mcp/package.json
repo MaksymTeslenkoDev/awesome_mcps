@@ -4,6 +4,7 @@
   "description": "",
   "scripts": {
     "dev": "tsx --watch ./server.ts",
+    "dev:stdio": "tsx ./stdio-server.ts",
     "build": "rm -rf dist && tsc && yarn copy:resources",
     "copy:resources": "rsync -avm --filter=':- .deployignore' --exclude='*.ts' --exclude node_modules ./dist/ ./dist/pkg/oicp-mcp && cp package.json dist/pkg/oicp-mcp/package.json && yarn copy:parent-resources",
     "copy:parent-resources": "pushd ../.. && yarn copy:resources pkg/oicp-mcp/dist && popd",

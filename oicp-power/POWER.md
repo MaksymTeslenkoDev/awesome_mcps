@@ -139,55 +139,15 @@ This provides everything needed to push EVSE data to the network.
 
 # MCP Configuration
 
-```json
-{
-  "mcpServers": {
-    "oicp": {
-      "command": "node",
-      "args": ["/path/to/awesome_mcps/pkg/oicp-mcp/dist/server.js"],
-      "env": {
-        "CONFIG_PATH": "/path/to/awesome_mcps/pkg/oicp-mcp/local.config.json"
-      }
-    }
-  }
-}
-```
-
-**Server Configuration** (`local.config.json`):
-```json
-{
-  "server": {
-    "host": "0.0.0.0",
-    "port": 2772
-  },
-  "logger": {
-    "level": "info",
-    "prettyPrint": false
-  }
-}
-```
-
-**Environment Variables:**
-- `CONFIG_PATH` - Path to config file (default: `./local.config.json`)
-- `NODE_ENV` - Environment mode (affects logging)
+The power uses stdio transport (communicates via stdin/stdout).
 
 **Verification:**
 Ask your AI assistant: "List the available OICP services for CPO role"
 
 **Troubleshooting:**
 - Server won't start → Check Node.js version: `node --version` (requires v20+)
-- Tools not appearing → Restart MCP client and verify server: `curl http://localhost:2772/oicp/v2.3/ping`
+- Tools not appearing → Check Kiro MCP logs in output panel
 - No search results → Verify role is "cpo" or "emp", try broader terms
-
-**Debug Mode:**
-```json
-{
-  "logger": {
-    "level": "debug",
-    "prettyPrint": true
-  }
-}
-```
 
 **Resources:**
 - CPO API: https://github.com/hubject/oicp-cpo-2.3-api-doc

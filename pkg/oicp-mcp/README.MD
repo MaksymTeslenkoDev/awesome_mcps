@@ -32,23 +32,29 @@ This MCP server exposes the complete Hubject OICP v2.3 protocol documentation th
 # Install dependencies
 yarn install
 
-# Build the project
-yarn build
+# Run in development mode (stdio transport for MCP clients)
+yarn dev:stdio
 
-# Run in development mode with hot reload
+# Run HTTP server mode (for testing)
 yarn dev
 
 # Run tests
 yarn test
 ```
 
-## Server Configuration
+## Transport Modes
 
-The server is configured via `local.config.json`:
+The server supports two transport modes:
 
-```json
-{"port": 2772, "host": "0.0.0.0", "logger": {"logLevel": "info", "pretty": true}}
-```
+**Stdio Transport** (recommended for MCP clients):
+- Run with `yarn dev:stdio`
+- Communicates via stdin/stdout
+- Used by Kiro, Claude Desktop, and other MCP clients
+
+**HTTP Transport** (for testing):
+- Run with `yarn dev`
+- Listens on port 2773 (configurable via `local.config.json`)
+- Endpoint: `POST /oicp/v2.3/mcp`
 
 ## MCP Resources
 
@@ -183,12 +189,18 @@ Get all operations belonging to a specific service tag.
 - **eRoamingDynamicPricing** - Dynamic pricing (2 operations)
 - **eRoamingChargingNotifications** - Charging notifications
 
-## API Endpoints
+## Entry Points
 
-The server exposes the following HTTP endpoints:
+**stdio-server.ts** - Stdio transport (default for MCP clients)
+- Communicates via stdin/stdout
+- No HTTP server required
+- Run with `yarn dev:stdio`
 
-- `POST /oicp/v2.3/mcp` - MCP protocol endpoint for AI agents
-- `POST /oicp/v2.3/ping` - Health check endpoint
+**server.ts** - HTTP transport (for testing)
+- Exposes HTTP endpoints:
+  - `POST /oicp/v2.3/mcp` - MCP protocol endpoint
+  - `POST /oicp/v2.3/ping` - Health check
+- Run with `yarn dev`
 
 ## Development
 
@@ -240,10 +252,18 @@ yarn test
 
 ## Usage with MCP Clients
 
-This server can be integrated with any MCP-compatible client (like Claude Desktop, Cursor, etc.) by configuring the client to connect to:
+Configure MCP clients to run the stdio server:
 
-```
-http://localhost:2772/oicp/v2.3/mcp
+```json
+{
+  "mcpServers": {
+    "oicp-mcp-server": {
+      "command": "yarn",
+      "args": ["dev:stdio"],
+      "cwd": "/path/to/pkg/oicp-mcp"
+    }
+  }
+}
 ```
 
 ## License

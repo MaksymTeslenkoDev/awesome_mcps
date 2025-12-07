@@ -7,17 +7,17 @@ A Kiro Power that provides AI agents with comprehensive access to Hubject's Open
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
-- [Server Deployment](#server-deployment)
 - [Usage](#usage)
+- [Available Tools](#available-tools)
 - [Configuration](#configuration)
 - [Troubleshooting](#troubleshooting)
 - [Documentation](#documentation)
 
 ## Overview
 
-The OICP Power packages an MCP (Model Context Protocol) server that exposes:
-- Complete OICP v2.3 API specifications for CPO and EMP roles
-- 6 intelligent search and query tools
+The OICP Power connects Kiro to a workspace-based MCP (Model Context Protocol) server that exposes:
+- Complete OICP v2.3 API specifications for CPO (Charge Point Operator) and EMP (e-Mobility Provider) roles
+- 6 intelligent search and query tools for exploring the protocol
 - 78+ technical diagrams and visual documentation
 - Comprehensive schema definitions and operation details
 
@@ -27,15 +27,23 @@ OICP (Open InterCharge Protocol) is Hubject's industry-standard protocol for EV 
 - Real-time data exchange between charging networks
 - Authorization and authentication of EV drivers
 - Charging session management and billing
-- Roaming capabilities across different networks
+- Roaming capabilities across different charging networks
+
+### What This Power Provides
+
+- **Intelligent Search**: Find operations, schemas, and services by keyword
+- **Detailed Documentation**: Access complete OpenAPI specifications and data models
+- **Visual Diagrams**: View 78+ technical diagrams explaining protocol flows
+- **Role-Specific Views**: Separate documentation for CPO and EMP perspectives
+- **Workflow Guides**: Steering files with common implementation patterns
 
 ## Prerequisites
 
-Before installing the OICP Power, ensure you have:
+Before using the OICP Power, ensure you have:
 
 - **Kiro IDE**: Latest version with Powers support
 - **Node.js**: Version 20 or higher (v22 LTS recommended)
-- **Operating System**: macOS, Linux, or Windows
+- **Yarn**: Package manager for building the MCP server
 
 To check your Node.js version:
 ```bash
@@ -46,7 +54,9 @@ If you need to install or update Node.js, visit [nodejs.org](https://nodejs.org/
 
 ## Installation
 
-### Method 1: Install via Kiro Powers Panel (Recommended)
+### Install via Kiro Powers Panel
+
+The OICP Power is installed through the Kiro Powers Panel:
 
 1. Open Kiro IDE
 2. Access the Powers management panel:
@@ -58,171 +68,40 @@ If you need to install or update Node.js, visit [nodejs.org](https://nodejs.org/
 
 The power will be automatically configured and ready to use.
 
-### Method 2: Manual Installation
+### Setting Up the MCP Server
 
-1. Download the OICP Power package (oicp-power-1.0.0.tar.gz)
+The OICP Power connects to an MCP server that runs from your workspace:
 
-2. Extract to your Kiro powers directory:
-   ```bash
-   # macOS/Linux
-   tar -xzf oicp-power-1.0.0.tar.gz -C ~/.kiro/powers/
-   
-   # Windows
-   # Extract to %USERPROFILE%\.kiro\powers\
-   ```
+```bash
+# Navigate to the MCP server directory
+cd pkg/oicp-mcp
 
-3. Install server dependencies:
-   ```bash
-   cd ~/.kiro/powers/oicp-power/server
-   npm install --production
-   ```
+# Install dependencies
+yarn install
+```
 
-4. Restart Kiro IDE to detect the new power
+The server runs via stdio transport and doesn't require building for development use.
 
 ### Verifying Installation
 
-After installation:
+After installation and building:
 
 1. Open the Powers panel in Kiro
 2. Look for "OICP Protocol Assistant" in your installed powers list
-3. Verify the power shows:
+3. Verify the power shows as active with:
    - ✓ 1 MCP server configured
    - ✓ 6 tools available
    - ✓ 3 steering files included
 
-## Server Deployment
-
-The OICP Power includes an MCP server that must be running to provide functionality. Kiro can manage this automatically, or you can run it manually for development.
-
-### Automatic Deployment (Default)
-
-When you activate the power in Kiro, the MCP server starts automatically:
-
-1. The server runs on `localhost:2772` by default
-2. Kiro manages the server lifecycle (start/stop/restart)
-3. No manual intervention required
-
-### Manual Local Deployment
-
-For development or troubleshooting, you can start the server manually:
-
-```bash
-# Navigate to the server directory
-cd ~/.kiro/powers/oicp-power/server
-
-# Start the server
-node dist/pkg/oicp-mcp/server.js
-```
-
-The server will start on the configured port (default: 2772) and log:
-```
-Server listening at http://0.0.0.0:2772
-MCP endpoint available at /oicp/v2.3/mcp
-```
-
-### Remote Server Deployment
-
-For production or shared environments, deploy the server remotely:
-
-#### Option 1: Docker Deployment
-
-```dockerfile
-FROM node:22-alpine
-
-WORKDIR /app
-COPY server/ .
-
-RUN npm install --production
-
-EXPOSE 2772
-
-CMD ["node", "dist/pkg/oicp-mcp/server.js"]
-```
-
-Build and run:
-```bash
-docker build -t oicp-mcp-server .
-docker run -p 2772:2772 -e CONFIG_PATH=/app/local.config.json oicp-mcp-server
-```
-
-#### Option 2: Direct Deployment
-
-1. Copy the `server/` directory to your remote host
-2. Install dependencies: `npm install --production`
-3. Configure the server (see [Configuration](#configuration))
-4. Start with a process manager:
-
-```bash
-# Using PM2
-pm2 start dist/pkg/oicp-mcp/server.js --name oicp-mcp
-
-# Using systemd (create /etc/systemd/system/oicp-mcp.service)
-[Unit]
-Description=OICP MCP Server
-After=network.target
-
-[Service]
-Type=simple
-User=nodejs
-WorkingDirectory=/opt/oicp-power/server
-ExecStart=/usr/bin/node dist/pkg/oicp-mcp/server.js
-Restart=on-failure
-Environment=CONFIG_PATH=/opt/oicp-power/server/local.config.json
-
-[Install]
-WantedBy=multi-user.target
-```
-
-#### Configuring Kiro for Remote Server
-
-Update the power configuration to point to your remote server:
-
-1. Edit `~/.kiro/powers/oicp-power/power.json`
-2. Modify the MCP server configuration:
-
-```json
-{
-  "mcpServers": {
-    "oicp-mcp-server": {
-      "command": "node",
-      "args": ["${powerPath}/server/dist/pkg/oicp-mcp/server.js"],
-      "env": {
-        "CONFIG_PATH": "${powerPath}/server/remote.config.json"
-      }
-    }
-  }
-}
-```
-
-3. Create `server/remote.config.json`:
-
-```json
-{
-  "port": 2772,
-  "host": "your-server.example.com",
-  "logger": {
-    "logLevel": "info",
-    "pretty": false
-  }
-}
-```
+If the server fails to start, see the [Troubleshooting](#troubleshooting) section.
 
 ## Usage
 
 ### Activating the Power
 
-Once installed, activate the OICP Power in Kiro:
+The OICP Power activates automatically when you mention OICP-related topics in your conversation with Kiro:
 
-#### Method 1: Manual Activation
-
-1. Open a chat with Kiro
-2. Type: "Activate the OICP power"
-3. Kiro will load the power and display available tools
-
-#### Method 2: Keyword-Based Activation (Automatic)
-
-The power activates automatically when you mention OICP-related topics:
-
+**Example queries that trigger activation:**
 ```
 "I need to implement OICP authorization"
 "How do I push EVSE data to Hubject?"
@@ -230,85 +109,57 @@ The power activates automatically when you mention OICP-related topics:
 "What's the schema for EMP authentication?"
 ```
 
-Keywords that trigger activation:
+**Keywords that trigger activation:**
 - oicp, hubject
 - ev, electric vehicle, charging
 - cpo, charge point operator
-- emp, e-mobility provider
+- emp, e-mobility provider, e-roaming
+
+You can also manually activate the power:
+```
+"Activate the OICP power"
+```
 
 ### Using the Tools
 
-Once activated, you can use the 6 MCP tools through natural conversation:
+Once activated, you can use the 6 MCP tools through natural conversation with Kiro. The tools are automatically invoked based on your questions.
 
-#### Example 1: Searching for Operations
+**Example conversations:**
 
+**Finding Operations:**
 ```
 You: "Find all authorization operations for CPO"
-
-Kiro uses: search_oicp_operations
-{
-  "query": "authorize",
-  "role": "cpo"
-}
+Kiro: [Uses search_oicp_operations to find matching endpoints]
 ```
 
-#### Example 2: Getting Operation Details
-
+**Getting Operation Details:**
 ```
 You: "Show me details for the authorize start operation"
-
-Kiro uses: get_operation_details
-{
-  "operationId": "eRoamingAuthorizeStart",
-  "role": "cpo"
-}
+Kiro: [Uses get_operation_details to retrieve full specification]
 ```
 
-#### Example 3: Retrieving Schemas
-
+**Exploring Schemas:**
 ```
 You: "What fields are in the EVSE data record?"
-
-Kiro uses: get_data_schema
-{
-  "schemaName": "EvseDataRecord",
-  "role": "cpo"
-}
+Kiro: [Uses get_data_schema to show the data structure]
 ```
 
-#### Example 4: Exploring Services
-
+**Browsing Services:**
 ```
 You: "What services are available for EMP?"
-
-Kiro uses: list_services
-{
-  "role": "emp"
-}
+Kiro: [Uses list_services to show all service categories]
 ```
 
-#### Example 5: Searching Schemas
-
+**Searching Data Types:**
 ```
 You: "Find all identification-related data types"
-
-Kiro uses: search_schemas
-{
-  "query": "identification",
-  "role": "emp"
-}
+Kiro: [Uses search_schemas to locate relevant schemas]
 ```
 
-#### Example 6: Querying by Service Tag
-
+**Querying by Service:**
 ```
 You: "Show me all charging notification operations"
-
-Kiro uses: get_operations_by_tag
-{
-  "tag": "eRoamingChargingNotifications",
-  "role": "cpo"
-}
+Kiro: [Uses get_operations_by_tag to list operations in that service]
 ```
 
 ### Accessing Steering Files
@@ -326,278 +177,236 @@ Available steering files:
 - **cpo-workflows.md** - Charge Point Operator workflows
 - **emp-workflows.md** - e-Mobility Provider workflows
 
+## Available Tools
+
+The OICP Power provides 6 MCP tools for exploring the protocol. Kiro invokes these automatically based on your questions.
+
+### 1. search_oicp_operations
+
+Search for API operations by keyword across the OICP specification.
+
+**Parameters:**
+- `query` (string, required): Search term (e.g., "authorize", "evse", "charging")
+- `role` (string, required): Either "cpo" or "emp"
+
+**Example usage:**
+```
+"Find all operations related to reservations in the CPO API"
+```
+
+**Returns:** List of matching operations with IDs, descriptions, and HTTP methods.
+
+### 2. get_operation_details
+
+Retrieve complete details for a specific API operation.
+
+**Parameters:**
+- `operationId` (string, required): The operation ID (e.g., "eRoamingAuthorizeStart")
+- `role` (string, required): Either "cpo" or "emp"
+
+**Example usage:**
+```
+"Show me the full specification for eRoamingPushEvseData"
+```
+
+**Returns:** Complete operation details including parameters, request/response schemas, and descriptions.
+
+### 3. get_data_schema
+
+Access the definition of a specific data type or schema.
+
+**Parameters:**
+- `schemaName` (string, required): Name of the schema (e.g., "EvseDataRecord", "Identification")
+- `role` (string, required): Either "cpo" or "emp"
+
+**Example usage:**
+```
+"What's the structure of the ChargingNotificationStart schema?"
+```
+
+**Returns:** Complete schema definition with all fields, types, and constraints.
+
+### 4. list_services
+
+Browse all available service categories (tags) in the OICP specification.
+
+**Parameters:**
+- `role` (string, required): Either "cpo" or "emp"
+
+**Example usage:**
+```
+"What service categories are available in the EMP API?"
+```
+
+**Returns:** List of all service tags with descriptions and operation counts.
+
+### 5. search_schemas
+
+Find data types and schemas by keyword.
+
+**Parameters:**
+- `query` (string, required): Search term (e.g., "authentication", "status", "pricing")
+- `role` (string, required): Either "cpo" or "emp"
+
+**Example usage:**
+```
+"Find all schemas related to pricing"
+```
+
+**Returns:** List of matching schemas with names and descriptions.
+
+### 6. get_operations_by_tag
+
+List all operations within a specific service category.
+
+**Parameters:**
+- `tag` (string, required): Service tag name (e.g., "eRoamingAuthorization", "eRoamingData")
+- `role` (string, required): Either "cpo" or "emp"
+
+**Example usage:**
+```
+"Show me all operations in the eRoamingEvseStatus service"
+```
+
+**Returns:** Complete list of operations in that service with details.
+
 ## Configuration
 
-### Server Configuration
+### MCP Server Configuration
 
-The MCP server is configured via `server/local.config.json`:
+The OICP Power uses stdio transport and runs via `yarn dev:stdio`. No HTTP configuration needed.
 
-```json
-{
-  "port": 2772,
-  "host": "0.0.0.0",
-  "logger": {
-    "logLevel": "info",
-    "pretty": false
-  }
-}
-```
+### Power Configuration
 
-#### Configuration Options
-
-**port** (number)
-- Default: `2772`
-- The port the MCP server listens on
-- Valid range: 1-65535
-
-**host** (string)
-- Default: `"0.0.0.0"` (all interfaces)
-- Use `"127.0.0.1"` for localhost only
-- Use specific IP for remote access
-
-**logger.logLevel** (string)
-- Default: `"info"`
-- Options: `"trace"`, `"debug"`, `"info"`, `"warn"`, `"error"`, `"fatal"`
-- Use `"debug"` for troubleshooting
-
-**logger.pretty** (boolean)
-- Default: `false`
-- Set to `true` for human-readable logs during development
-- Keep `false` for production (JSON logs)
-
-### Environment Variables
-
-**CONFIG_PATH**
-- Path to configuration file
-- Default: `${powerPath}/server/local.config.json`
-- Override to use custom configuration
-
-Example:
-```bash
-CONFIG_PATH=/path/to/custom.config.json node dist/pkg/oicp-mcp/server.js
-```
-
-### Custom Configuration
-
-To create a custom configuration:
-
-1. Copy `server/local.config.json` to `server/custom.config.json`
-2. Modify settings as needed
-3. Update `power.json` to reference the new config:
-
-```json
-{
-  "mcpServers": {
-    "oicp-mcp-server": {
-      "env": {
-        "CONFIG_PATH": "${powerPath}/server/custom.config.json"
-      }
-    }
-  }
-}
-```
+The power's MCP server connection is configured in `mcp.json`. The server uses stdio transport and communicates via stdin/stdout.
 
 ## Troubleshooting
 
-### Power Not Appearing in Kiro
+### Installation Issues
 
-**Problem**: OICP Power doesn't show in the Powers panel
-
-**Solutions**:
-1. Restart Kiro IDE
-2. Check installation directory: `~/.kiro/powers/oicp-power/`
-3. Verify `power.json` exists and is valid JSON
-4. Check Kiro logs for power loading errors
-
-### Server Won't Start
-
-**Problem**: MCP server fails to start
+**Problem**: Dependencies fail to install
 
 **Solutions**:
 
-1. **Check Node.js version**:
+1. **Verify Node.js version**:
    ```bash
    node --version  # Should be v20 or higher
    ```
 
-2. **Verify server files exist**:
+2. **Clean install**:
    ```bash
-   ls ~/.kiro/powers/oicp-power/server/dist/pkg/oicp-mcp/server.js
+   cd ${workspaceFolder}/pkg/oicp-mcp
+   rm -rf node_modules yarn.lock
+   yarn install
    ```
 
-3. **Check for port conflicts**:
+3. **Verify dependencies installed**:
    ```bash
-   # macOS/Linux
-   lsof -i :2772
-   
-   # Windows
-   netstat -ano | findstr :2772
-   ```
-   
-   If port is in use, either:
-   - Stop the conflicting process
-   - Change port in `local.config.json`
-
-4. **Install dependencies**:
-   ```bash
-   cd ~/.kiro/powers/oicp-power/server
-   npm install --production
+   cd ${workspaceFolder}/pkg/oicp-mcp
+   ls node_modules  # Should contain packages
    ```
 
-5. **Check server logs**:
-   - Look for error messages in Kiro's output panel
-   - Run server manually to see detailed errors:
-     ```bash
-     cd ~/.kiro/powers/oicp-power/server
-     node dist/pkg/oicp-mcp/server.js
-     ```
+### Power Not Connecting
 
-### Tools Not Working
-
-**Problem**: MCP tools return errors or no results
+**Problem**: Power installed but tools don't work
 
 **Solutions**:
 
-1. **Verify server is running**:
-   ```bash
-   curl http://localhost:2772/oicp/v2.3/ping
-   # Should return: {"status":"ok"}
-   ```
+1. **Check Kiro MCP logs**:
+   - Open Kiro output panel
+   - Look for MCP server connection errors
 
-2. **Check MCP endpoint**:
-   ```bash
-   curl -X POST http://localhost:2772/oicp/v2.3/mcp \
-     -H "Content-Type: application/json" \
-     -d '{"method":"tools/list"}'
-   ```
-   
-   Should return list of 6 tools.
+2. **Verify mcp.json configuration**:
+   - Check that `mcp.json` exists in `oicp-power/`
+   - Verify it uses `yarn dev:stdio`
+   - Ensure `cwd` points to `${workspaceFolder}/pkg/oicp-mcp`
 
-3. **Verify role parameter**:
-   - Ensure you're using "cpo" or "emp" (lowercase)
+3. **Restart Kiro**:
+   - Reload the window or restart Kiro IDE
+   - Reactivate the power
+
+### Tools Return No Results
+
+**Problem**: MCP tools execute but return empty or incorrect results
+
+**Solutions**:
+
+1. **Verify role parameter**:
+   - Use "cpo" or "emp" (lowercase)
    - Some operations only exist in one role
 
-4. **Check operation IDs**:
+2. **Check operation IDs**:
    - Use `search_oicp_operations` to find correct IDs
-   - Operation IDs are case-sensitive
+   - Operation IDs are case-sensitive (e.g., "eRoamingAuthorizeStart")
 
-### Connection Timeout
-
-**Problem**: Requests to MCP server timeout
-
-**Solutions**:
-
-1. **Increase timeout in Kiro settings** (if available)
-
-2. **Check server performance**:
+3. **Verify OpenAPI specs exist**:
    ```bash
-   # Monitor server process
-   top -p $(pgrep -f "oicp-mcp")
+   ls ${workspaceFolder}/pkg/oicp-mcp/oicp/v2.3/cpo/openapi.yaml
+   ls ${workspaceFolder}/pkg/oicp-mcp/oicp/v2.3/emp/openapi.yaml
    ```
 
-3. **Verify network connectivity**:
-   ```bash
-   ping localhost
-   telnet localhost 2772
-   ```
-
-4. **Check firewall settings**:
-   - Ensure port 2772 is not blocked
-   - Add exception for Node.js if needed
-
-### Invalid Configuration
-
-**Problem**: Server starts but behaves incorrectly
-
-**Solutions**:
-
-1. **Validate JSON syntax**:
-   ```bash
-   cat server/local.config.json | python -m json.tool
-   ```
-
-2. **Reset to defaults**:
-   ```bash
-   cp server/local.config.json.backup server/local.config.json
-   ```
-
-3. **Check environment variables**:
-   ```bash
-   echo $CONFIG_PATH
-   ```
-
-### Permission Errors
-
-**Problem**: Cannot read files or start server
-
-**Solutions**:
-
-1. **Fix file permissions**:
-   ```bash
-   chmod -R 755 ~/.kiro/powers/oicp-power/
-   chmod 644 ~/.kiro/powers/oicp-power/server/local.config.json
-   ```
-
-2. **Check ownership**:
-   ```bash
-   ls -la ~/.kiro/powers/oicp-power/
-   ```
-
-3. **Run with appropriate user**:
-   - Don't run as root unless necessary
-   - Ensure user has read access to power directory
+4. **Check server logs**:
+   - Server logs to stderr
+   - Check Kiro MCP output panel for error messages
 
 ### Getting More Help
 
 If issues persist:
 
-1. **Check Kiro documentation**: Look for MCP and Powers troubleshooting guides
-2. **Review server logs**: Enable debug logging in `local.config.json`
-3. **Test server independently**: Run server manually and test with curl
-4. **Verify OICP specs**: Ensure OpenAPI files are present in `server/oicp/v2.3/`
+1. **Check Kiro MCP logs**: Look for error messages in the output panel
+2. **Test server independently**: Run `yarn dev:stdio` manually in `pkg/oicp-mcp/`
+3. **Verify workspace structure**: Ensure all files are in correct locations
+4. **Check dependencies**: Run `yarn install` in `pkg/oicp-mcp/`
 
 ## Documentation
 
-### Power Documentation
+### Steering Files
 
-- **POWER.md** - Complete power overview and tool reference
-- **steering/getting-started.md** - First-time user guide
-- **steering/cpo-workflows.md** - CPO implementation workflows
-- **steering/emp-workflows.md** - EMP implementation workflows
+Detailed workflow guides included with the power:
+
+- **[getting-started.md](steering/getting-started.md)** - First-time setup and basic queries
+- **[cpo-workflows.md](steering/cpo-workflows.md)** - Charge Point Operator implementation workflows
+- **[emp-workflows.md](steering/emp-workflows.md)** - e-Mobility Provider implementation workflows
+
+Access these by asking Kiro:
+```
+"Show me the getting started guide for OICP"
+"I need the CPO workflow documentation"
+```
 
 ### OICP Official Documentation
 
-- **CPO API**: https://github.com/hubject/oicp-cpo-2.3-api-doc
-- **EMP API**: https://github.com/hubject/oicp-emp-2.3-api-doc
-- **Hubject**: https://www.hubject.com
+Official Hubject OICP v2.3 specifications:
 
-### MCP Protocol
+- **CPO API Documentation**: [github.com/hubject/oicp-cpo-2.3-api-doc](https://github.com/hubject/oicp-cpo-2.3-api-doc)
+- **EMP API Documentation**: [github.com/hubject/oicp-emp-2.3-api-doc](https://github.com/hubject/oicp-emp-2.3-api-doc)
+- **Hubject Website**: [hubject.com](https://www.hubject.com)
 
-- **MCP Specification**: https://modelcontextprotocol.io
-- **MCP SDK**: https://github.com/modelcontextprotocol/typescript-sdk
+### Power Documentation
+
+- **[POWER.md](POWER.md)** - Complete power overview and quick reference
+- **[mcp.json](mcp.json)** - MCP server configuration
 
 ## Version Information
 
-- **Power Version**: 1.0.0
 - **OICP Version**: 2.3
-- **MCP Server**: oicp-mcp-server
+- **MCP Server**: oicp-mcp-server (workspace-based)
 - **Node.js**: ≥20.0.0 (v22 LTS recommended)
+- **Package Manager**: Yarn v1
 
 ## License
 
-MIT License - See LICENSE file for details
-
-## Contributing
-
-Contributions are welcome! Please see CONTRIBUTING.md for guidelines.
+This project is licensed under the MIT License.
 
 ## Support
 
 For issues and questions:
-- Open an issue on GitHub
-- Check the troubleshooting section above
-- Review the steering files for usage guidance
+
+1. Check the [Troubleshooting](#troubleshooting) section above
+2. Review the [steering files](#steering-files) for usage guidance
+3. Consult the [official OICP documentation](#oicp-official-documentation)
+4. Open an issue on the project repository
 
 ---
 
-**Note**: This power requires an active MCP server connection. Ensure the server is running and accessible before using the tools.
+**Note**: This power requires the workspace MCP server to be built and running. Ensure you've completed the [Installation](#installation) steps before using the tools.

@@ -4,6 +4,7 @@
 .vscode
 .git
 .cursor
+.kiro
 .specify
 .github
 .deployignore

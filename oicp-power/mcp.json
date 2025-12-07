@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "oicp-mcp-server": {
+      "command": "yarn",
+      "args": ["dev:stdio"],
+      "cwd": "${workspaceFolder}/pkg/oicp-mcp"
+    }
+  }
+}
